@@ -1,0 +1,22 @@
+version: "3"
+services:
+  primary:
+    container_name: primary
+    build: postgres/
+    ports:
+      - 5432:5432
+    links:
+      - standby1
+      - standby2
+
+  standby1:
+    container_name: standby1
+    build: postgres/
+    ports:
+      - 5433:5432
+
+  standby2:
+    container_name: standby2
+    build: postgres/
+    ports:
+      - 5434:5432
