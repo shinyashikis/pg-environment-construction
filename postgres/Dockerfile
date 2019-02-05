@@ -23,7 +23,8 @@ RUN mkdir /usr/local/pgsql \
   && chmod 755 /usr/local/pgsql
 
 #postgresユーザにスイッチ
-RUN su - postgres
+USER postgres
+WORKDIR /home/postgres
 
 #インストール
 #RUN wget https://ftp.postgresql.org/pub/source/v10.5/postgresql-10.5.tar.gz \
@@ -37,24 +38,22 @@ RUN tar zxvf /usr/local/src/postgresql-10.5.tar.gz \
 RUN echo "export PATH=/usr/local/pgsql/bin:$PATH" >> ~/.bashrc \
   && echo "export POSTGRES_HOME=/usr/local/pgsql" >> ~/.bashrc \
   && echo "export PGLIB=$POSTGRES_HOME/lib" >> ~/.bashrc \
-  && echo "export PGDATA=/home/pgsql/data" >> ~/.bashrc \
-  && echo "export MANPATH="$MANPATH":$POSTGRES_HOME/man" >> ~/.bashrc \
-  && echo "export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":"$PGLIB"" >> ~/.bashrc
+  && echo "export PGDATA=/usr/local/pgsql/data" >> ~/.bashrc \
+  && echo "export MANPATH=\"$MANPATH\":$POSTGRES_HOME/man" >> ~/.bashrc \
+  && echo "export LD_LIBRARY_PATH=\"$LD_LIBRARY_PATH\":\"$PGLIB\"" >> ~/.bashrc
+
+#PGDATAで設定したディレクトリを作成する
+RUN /usr/local/pgsql/bin/initdb --encoding=UTF8 --no-locale -D /usr/local/pgsql/data
 
 #rootユーザにスイッチ
-RUN su -
+USER root
 
 #起動スクリプトの設定
-RUN cp /postgresql-10.5/contrib/start-scripts/linux /etc/init.d/postgres \
+RUN cp /home/postgres/postgresql-10.5/contrib/start-scripts/linux /etc/init.d/postgres \
   && chmod 755 /etc/init.d/postgres \
   && chkconfig --add  /etc/init.d/postgres
 
-#postgresユーザにスイッチ
-RUN su - postgres
-	
-#PGDATAで設定したディレクトリを作成する
-RUN initdb --encoding=UTF8 --no-locale -D /usr/local/pgsql/data
-
 #DBの起動
-CMD ["service" "postgres" "start"]
+#CMD ["systemctl" "start" "postgres"]
+ENTRYPOINT /etc/init.d/postgres start -D FOREGROUND
 
