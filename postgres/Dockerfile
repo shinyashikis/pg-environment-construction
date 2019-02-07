@@ -35,12 +35,12 @@ RUN tar zxvf /usr/local/src/postgresql-10.5.tar.gz \
   && make install
 
 #postgresユーザの.bashrcに以下の環境変数を追加
-RUN echo "export PATH=/usr/local/pgsql/bin:$PATH" >> ~/.bashrc \
+RUN echo "export PATH=/usr/local/pgsql/bin:\$PATH" >> ~/.bashrc \
   && echo "export POSTGRES_HOME=/usr/local/pgsql" >> ~/.bashrc \
-  && echo "export PGLIB=$POSTGRES_HOME/lib" >> ~/.bashrc \
+  && echo "export PGLIB=\$POSTGRES_HOME/lib" >> ~/.bashrc \
   && echo "export PGDATA=/usr/local/pgsql/data" >> ~/.bashrc \
-  && echo "export MANPATH=\"$MANPATH\":$POSTGRES_HOME/man" >> ~/.bashrc \
-  && echo "export LD_LIBRARY_PATH=\"$LD_LIBRARY_PATH\":\"$PGLIB\"" >> ~/.bashrc
+  && echo "export MANPATH=\"\$MANPATH\":\$POSTGRES_HOME/man" >> ~/.bashrc \
+  && echo "export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH\":\"\$PGLIB\"" >> ~/.bashrc
 
 #PGDATAで設定したディレクトリを作成する
 RUN /usr/local/pgsql/bin/initdb --encoding=UTF8 --no-locale -D /usr/local/pgsql/data
