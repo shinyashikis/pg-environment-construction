@@ -54,6 +54,4 @@ RUN cp /home/postgres/postgresql-10.5/contrib/start-scripts/linux /etc/init.d/po
   && chkconfig --add  /etc/init.d/postgres
 
 #DBの起動
-#CMD ["systemctl" "start" "postgres"]
-ENTRYPOINT /etc/init.d/postgres start -D FOREGROUND
-
+CMD /etc/init.d/postgres start && tail -f /dev/null
