@@ -2,6 +2,7 @@ version: "3"
 services:
   primary:
     container_name: primary
+    image: postgres10
     build: postgres/
     ports:
       - 5432:5432
@@ -11,12 +12,14 @@ services:
 
   standby1:
     container_name: standby1
+    image: postgres10
     build: postgres/
     ports:
       - 5433:5432
 
   standby2:
     container_name: standby2
+    image: postgres10
     build: postgres/
     ports:
       - 5434:5432
