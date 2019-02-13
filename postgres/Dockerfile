@@ -8,11 +8,11 @@ COPY postgresql-10.5.tar.gz /usr/local/src
 
 #必要なライブラリ等をインストール
 RUN yum -y install gcc \
+  && yum -y install make \
   && yum -y install readline \
   && yum -y install readline-devel \
-  && yum -y install zlib-devel \
-  && yum -y install make \
-  && yum -y install wget
+  && yum -y install wget \
+  && yum -y install zlib-devel
 
 #ユーザ作成
 RUN useradd postgres
@@ -34,24 +34,23 @@ RUN tar zxvf /usr/local/src/postgresql-10.5.tar.gz \
   && make \
   && make install
 
-#postgresユーザの.bashrcに以下の環境変数を追加
-RUN echo "export PATH=/usr/local/pgsql/bin:\$PATH" >> ~/.bashrc \
-  && echo "export POSTGRES_HOME=/usr/local/pgsql" >> ~/.bashrc \
-  && echo "export PGLIB=\$POSTGRES_HOME/lib" >> ~/.bashrc \
-  && echo "export PGDATA=/usr/local/pgsql/data" >> ~/.bashrc \
-  && echo "export MANPATH=\"\$MANPATH\":\$POSTGRES_HOME/man" >> ~/.bashrc \
-  && echo "export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH\":\"\$PGLIB\"" >> ~/.bashrc
-
-#PGDATAで設定したディレクトリを作成する
+#データベースクラスタを作成する
 RUN /usr/local/pgsql/bin/initdb --encoding=UTF8 --no-locale -D /usr/local/pgsql/data
 
-#rootユーザにスイッチ
-USER root
+# rootユーザおよびデータベース「my_db」を作成する
+RUN /usr/local/pgsql/bin/pg_ctl -D /usr/local/pgsql/data -w start \
+  && /usr/local/pgsql/bin/psql --command "CREATE USER root WITH SUPERUSER PASSWORD 'docker';" \
+  && /usr/local/pgsql/bin/createdb my_db root 
 
-#起動スクリプトの設定
-RUN cp /home/postgres/postgresql-10.5/contrib/start-scripts/linux /etc/init.d/postgres \
-  && chmod 755 /etc/init.d/postgres \
-  && chkconfig --add  /etc/init.d/postgres
+#外部から接続できるように設定を変更
+RUN echo "host all  all    0.0.0.0/0  password" >> /usr/local/pgsql/data/pg_hba.conf
 
-#DBの起動
-CMD /etc/init.d/postgres start && tail -f /dev/null
+#すべてのIPアドレスからの接続を許可
+RUN echo "listen_addresses='*'" >> /usr/local/pgsql/data/postgresql.conf
+
+#PORT開放
+EXPOSE 5432
+
+#フォアグラウンドで実行
+CMD ["/usr/local/pgsql/bin/postgres", "-D", "/usr/local/pgsql/data/"]
+
